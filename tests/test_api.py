@@ -27,6 +27,16 @@ def test_health_and_capabilities() -> None:
     assert capabilities.json()["supports_mixed_native_scripts"] is True
 
 
+def test_browser_ui_is_served() -> None:
+    with make_client() as client:
+        response = client.get("/")
+
+    assert response.status_code == 200
+    assert "BhashaVox" in response.text
+    assert "தமிழ்" in response.text
+    assert "മലയാളം" in response.text
+
+
 def test_speech_returns_combined_wav() -> None:
     with make_client() as client:
         response = client.post(
@@ -48,4 +58,3 @@ def test_rejects_blank_and_oversized_text() -> None:
 
     assert blank.status_code == 422
     assert oversized.status_code == 413
-

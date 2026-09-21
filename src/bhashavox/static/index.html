@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Turn English, Tamil, and Malayalam text into downloadable speech."
+    />
+    <title>BhashaVox — text into voice</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="masthead">
+        <a class="wordmark" href="/" aria-label="BhashaVox home">
+          <span class="mark" aria-hidden="true">BV</span>
+          <span>BhashaVox</span>
+        </a>
+        <div id="provider-status" class="provider-status" aria-live="polite">
+          <span class="status-dot"></span>
+          Checking speech engine
+        </div>
+      </header>
+
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">Local-first text to speech</p>
+        <h1 id="page-title">Give your words<br /><em>a voice.</em></h1>
+        <p class="lede">
+          Paste English, தமிழ், or മലയാളം. Listen here, then keep the WAV.
+          Your text stays with the configured local speech engine.
+        </p>
+      </section>
+
+      <section class="studio" aria-label="Speech studio">
+        <form id="speech-form">
+          <div class="field-header">
+            <label for="text">Text to speak</label>
+            <span id="character-count" class="character-count">0 / 5,000</span>
+          </div>
+          <textarea
+            id="text"
+            name="text"
+            rows="10"
+            required
+            spellcheck="true"
+            placeholder="Hello! வணக்கம்! നമസ്കാരം!"
+          ></textarea>
+
+          <div class="controls-grid">
+            <fieldset class="language-field">
+              <legend>Language</legend>
+              <div class="segmented-control">
+                <label>
+                  <input type="radio" name="language" value="auto" checked />
+                  <span>Auto</span>
+                </label>
+                <label>
+                  <input type="radio" name="language" value="en" />
+                  <span>English</span>
+                </label>
+                <label>
+                  <input type="radio" name="language" value="ta" />
+                  <span>தமிழ்</span>
+                </label>
+                <label>
+                  <input type="radio" name="language" value="ml" />
+                  <span>മലയാളം</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="field voice-field">
+              <label for="voice">Voice</label>
+              <select id="voice" name="voice" disabled>
+                <option value="">Automatic by script</option>
+              </select>
+              <small id="voice-help">Choose a language to select its voice.</small>
+            </div>
+
+            <div class="field speed-field">
+              <div class="field-header">
+                <label for="speed">Speed</label>
+                <output id="speed-output" for="speed">1.0×</output>
+              </div>
+              <input
+                id="speed"
+                name="speed"
+                type="range"
+                min="0.6"
+                max="1.6"
+                step="0.1"
+                value="1.0"
+              />
+            </div>
+          </div>
+
+          <div id="message" class="message" aria-live="polite"></div>
+          <button id="generate" class="generate" type="submit">
+            <span>Generate speech</span>
+            <span aria-hidden="true">→</span>
+          </button>
+        </form>
+
+        <aside id="result" class="result" aria-labelledby="result-title" hidden>
+          <div>
+            <p class="eyebrow">Ready to listen</p>
+            <h2 id="result-title">Your audio</h2>
+          </div>
+          <audio id="audio" controls preload="metadata"></audio>
+          <a id="download" class="download" download="bhashavox.wav">
+            Download WAV
+          </a>
+        </aside>
+      </section>
+
+      <footer>
+        <span>Open source · Apache-2.0</span>
+        <a href="/docs">API documentation</a>
+      </footer>
+    </main>
+  </body>
+</html>

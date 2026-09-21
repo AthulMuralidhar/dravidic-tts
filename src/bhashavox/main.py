@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import io
+from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 
 from bhashavox import __version__
 from bhashavox.config import Settings
@@ -35,6 +37,12 @@ def create_app(
         version=__version__,
         description="Local-first English, Tamil, and Malayalam text to speech.",
     )
+    static_directory = Path(__file__).parent / "static"
+    app.mount("/static", StaticFiles(directory=static_directory), name="static")
+
+    @app.get("/", include_in_schema=False)
+    async def index() -> FileResponse:
+        return FileResponse(static_directory / "index.html")
 
     @app.get("/api/v1/health", response_model=HealthResponse)
     async def health() -> HealthResponse:
@@ -113,4 +121,3 @@ def run() -> None:
 
 if __name__ == "__main__":
     run()
-
