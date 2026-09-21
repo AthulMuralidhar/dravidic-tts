@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+
+# Generated audio and model data
+outputs/
+models/
+*.wav
+*.mp3
+
+# Environment and editors
+.env
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Frontend tooling (if introduced later)
+node_modules/
+coverage/
