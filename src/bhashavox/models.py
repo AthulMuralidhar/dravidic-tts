@@ -46,3 +46,19 @@ class HealthResponse(BaseModel):
     provider: str
     provider_ready: bool
 
+
+class TextReviewRequest(BaseModel):
+    text: str = Field(min_length=1)
+
+
+class TextReviewIssue(BaseModel):
+    code: str
+    message: str
+    count: int
+
+
+class TextReviewResponse(BaseModel):
+    original: str
+    repaired: str
+    changed: bool
+    issues: list[TextReviewIssue]

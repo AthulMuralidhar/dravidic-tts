@@ -65,6 +65,44 @@ def test_speech_returns_combined_wav() -> None:
         assert audio.getnframes() > 0
 
 
+def test_text_review_returns_safe_repairs_and_ambiguous_warnings() -> None:
+    with make_client() as client:
+        response = client.post(
+            "/api/v1/text/review",
+            json={"text": "േവഗം രാ?തി"},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["repaired"] == "വേഗം രാത്രി"
+    assert response.json()["changed"] is True
+    assert [issue["code"] for issue in response.json()["issues"]] == [
+        "malayalam-prebase-order",
+        "restored-malayalam-glyph",
+    ]
+
+
+def test_speech_corrects_safe_copy_paste_damage_before_audio() -> None:
+    with make_client() as client:
+        response = client.post(
+            "/api/v1/speech",
+            json={"text": "േവഗം", "language": "ml"},
+        )
+
+    assert response.status_code == 200
+    assert response.headers["x-bhashavox-text-corrected"] == "true"
+
+
+def test_speech_automatically_restores_missing_malayalam_glyphs() -> None:
+    with make_client() as client:
+        response = client.post(
+            "/api/v1/speech",
+            json={"text": "രാ?തി", "language": "ml"},
+        )
+
+    assert response.status_code == 200
+    assert response.headers["x-bhashavox-text-corrected"] == "true"
+
+
 def test_rejects_blank_and_oversized_text() -> None:
     with make_client(max_characters=5) as client:
         blank = client.post("/api/v1/speech", json={"text": "   "})

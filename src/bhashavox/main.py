@@ -17,11 +17,15 @@ from bhashavox.models import (
     CapabilitiesResponse,
     HealthResponse,
     SpeechRequest,
+    TextReviewIssue,
+    TextReviewRequest,
+    TextReviewResponse,
     Voice,
 )
 from bhashavox.providers.base import ProviderUnavailable, SpeechProvider
 from bhashavox.providers.factory import create_provider
 from bhashavox.service import SpeechService
+from bhashavox.text import review_text
 
 
 def create_app(
@@ -71,6 +75,23 @@ def create_app(
             max_characters=active_settings.max_characters,
         )
 
+    @app.post("/api/v1/text/review", response_model=TextReviewResponse)
+    async def text_review(request: TextReviewRequest) -> TextReviewResponse:
+        review = review_text(request.text)
+        return TextReviewResponse(
+            original=review.original,
+            repaired=review.repaired,
+            changed=review.changed,
+            issues=[
+                TextReviewIssue(
+                    code=issue.code,
+                    message=issue.message,
+                    count=issue.count,
+                )
+                for issue in review.issues
+            ],
+        )
+
     @app.post("/api/v1/speech")
     async def speech(request: SpeechRequest) -> StreamingResponse:
         if len(request.text) > active_settings.max_characters:
@@ -83,10 +104,11 @@ def create_app(
             )
         if not active_provider.ready:
             raise HTTPException(status_code=503, detail="speech provider is not ready")
+        text_review = review_text(request.text)
         try:
             result = await run_in_threadpool(
                 speech_service.synthesize,
-                request.text,
+                text_review.repaired,
                 request.language,
                 request.voice,
                 request.speed,
@@ -102,6 +124,7 @@ def create_app(
             headers={
                 "Content-Disposition": 'attachment; filename="bhashavox.wav"',
                 "X-BhashaVox-Segments": str(result.segment_count),
+                "X-BhashaVox-Text-Corrected": str(text_review.changed).lower(),
             },
         )
 

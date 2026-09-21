@@ -212,6 +212,13 @@ textarea::placeholder {
   color: #aaa69c;
 }
 
+.cleanup-note {
+  margin: 10px 2px 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .controls-grid {
   display: grid;
   grid-template-columns: 1.5fr 0.8fr 0.7fr;

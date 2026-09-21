@@ -99,7 +99,9 @@ form.addEventListener("change", (event) => {
   if (event.target.name === "language") updateVoices();
 });
 
-textInput.addEventListener("input", updateCharacterCount);
+textInput.addEventListener("input", () => {
+  updateCharacterCount();
+});
 speedInput.addEventListener("input", () => {
   speedOutput.value = `${Number(speedInput.value).toFixed(1)}×`;
 });
@@ -145,6 +147,10 @@ form.addEventListener("submit", async (event) => {
         // The fallback below includes the HTTP status.
       }
       throw new Error(readError(response, body));
+    }
+
+    if (response.headers.get("X-BhashaVox-Text-Corrected") === "true") {
+      message.textContent = "Copy/paste damage was corrected before speech.";
     }
 
     const blob = await response.blob();
