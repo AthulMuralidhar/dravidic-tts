@@ -114,6 +114,40 @@ Planned behavior:
 - Re-check all licenses immediately before distributing model weights in an
   image or hosted service.
 
+## Local prototype findings — 2026-09-21
+
+The first eSpeak NG end-to-end test was rejected. Although the provider
+generated valid WAV files and supported the requested language codes, its
+Malayalam was robotic, frequently unintelligible, and not suitable as a user-
+facing fallback. It may remain useful only for automated plumbing checks. The
+UI now labels diagnostic tone mode explicitly, and eSpeak must also be labeled
+as low quality if it remains available to developers.
+
+The sample pasted during testing also exposed a separate source-text problem:
+it contained Malayalam pre-base vowel marks in invalid copy/paste order (for
+example, forms shaped like `െ` or `േ` appearing before the consonant they
+modify) and question marks where conjunct characters had been lost. This is
+typical of text extracted from some PDFs, legacy-font documents, or faulty OCR.
+Unicode NFC alone cannot restore missing characters. BhashaVox needs a review
+stage that can safely reorder deterministic vowel-mark corruption and flag
+irrecoverable characters before synthesis.
+
+Docker Desktop exposed 16 CPUs and approximately 14.6 GB RAM to containers;
+no NVIDIA runtime was detected. Indic Parler-TTS should fit its documented
+roughly 4–6 GB CPU memory requirement, but latency must be measured. The
+official `ai4bharat/indic-parler-tts` checkpoint is currently gated: an
+unauthenticated request for `model.safetensors` returned HTTP 401, and the
+3.75 GB model card requires accepting its access conditions. The token must be
+supplied as a build secret or local Hugging Face credential and must never be
+committed or baked into image metadata.
+
+An ungated Apache-2.0 ONNX mirror exists at
+[`OpenVoiceOS/phoonnx-indic-parler`](https://huggingface.co/OpenVoiceOS/phoonnx-indic-parler).
+It contains about 5 GB of float32 graphs and reports waveform parity with the
+PyTorch checkpoint. It is a possible CPU fallback, but it is a third-party
+export with a smaller user base and must be evaluated before replacing the
+official model path.
+
 ## Source index
 
 - [Indic Parler-TTS model card](https://huggingface.co/ai4bharat/indic-parler-tts)
@@ -123,4 +157,5 @@ Planned behavior:
 - [Meta MMS documentation](https://github.com/facebookresearch/fairseq/blob/main/examples/mms/README.md)
 - [Meta MMS Tamil model card](https://huggingface.co/facebook/mms-tts-tam)
 - [AI4Bharat IndicXlit repository](https://github.com/AI4Bharat/IndicXlit)
-
+- [OpenVoiceOS phoonnx Indic Parler ONNX export](https://huggingface.co/OpenVoiceOS/phoonnx-indic-parler)
+- [VEXYL-TTS CPU implementation notes](https://github.com/vexyl-ai/vexyl-tts)
