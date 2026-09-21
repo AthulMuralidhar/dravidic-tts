@@ -159,3 +159,37 @@ official model path.
 - [AI4Bharat IndicXlit repository](https://github.com/AI4Bharat/IndicXlit)
 - [OpenVoiceOS phoonnx Indic Parler ONNX export](https://huggingface.co/OpenVoiceOS/phoonnx-indic-parler)
 - [VEXYL-TTS CPU implementation notes](https://github.com/vexyl-ai/vexyl-tts)
+
+## Implementation checkpoint — 2026-09-22
+
+The earlier recommendation to flag irrecoverable characters was superseded by
+the product decision that correction must be built into the synthesis path and
+must not require user editing. Deterministic Unicode-order repair is now
+automatic. The two placeholder corruptions observed in the supplied sample are
+also restored automatically. Unknown Malayalam-adjacent question marks are
+currently removed so the speech engine cannot vocalize them; this is a safe
+audio fallback, not proof that the missing word was reconstructed correctly.
+
+Research found no ready-to-use, Malayalam-specific post-correction checkpoint
+that could be adopted without evaluation. AI4Bharat IndicBART supports
+Malayalam and was trained with a text-infilling objective, but non-Devanagari
+input requires script conversion and the model card presents infilling as a
+pretraining/generation capability rather than a validated Malayalam OCR repair
+system. The open Datuk corpus contains more than 83,000 Malayalam dictionary
+entries under ODbL-1.0 and is a possible candidate source for lexical matching,
+but its share-alike database obligations and lack of contextual frequency
+ranking need design review before redistribution.
+
+The neural runtime scaffold follows the official Indic Parler-TTS inference
+sequence: load the Parler model, tokenize transcript and voice description
+separately, generate waveform samples, and write 44.1 kHz model output to WAV.
+The implementation pins the Parler-TTS source revision used during research
+because its package currently pins Transformers 4.46.1. Actual Docker build and
+CPU inference results remain unverified and must be appended after the next
+session's experiment.
+
+Additional sources:
+
+- [AI4Bharat IndicBART model card](https://huggingface.co/ai4bharat/IndicBART)
+- [Datuk Malayalam dictionary corpus](https://github.com/knadh/datuk)
+- [Hugging Face Parler-TTS repository](https://github.com/huggingface/parler-tts)
