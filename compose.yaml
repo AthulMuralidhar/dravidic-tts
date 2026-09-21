@@ -2,14 +2,18 @@ services:
   bhashavox:
     build:
       context: .
-      target: runtime
-    image: bhashavox:local
+      dockerfile: Dockerfile.neural
+      target: neural-runtime
+    image: bhashavox:neural-local
     init: true
     ports:
       - "${BHASHAVOX_BIND_PORT:-8000}:8000"
     environment:
-      BHASHAVOX_TTS_PROVIDER: "${BHASHAVOX_TTS_PROVIDER:-espeak}"
+      BHASHAVOX_TTS_PROVIDER: "${BHASHAVOX_TTS_PROVIDER:-indic-parler}"
       BHASHAVOX_MAX_CHARACTERS: "${BHASHAVOX_MAX_CHARACTERS:-5000}"
+      HF_HOME: /home/app/.cache/huggingface
+    volumes:
+      - hf-cache:/home/app/.cache/huggingface
     read_only: true
     tmpfs:
       - /tmp:size=64m,mode=1777
@@ -30,3 +34,20 @@ services:
       start_period: 10s
       retries: 3
 
+  hf-login:
+    profiles: ["setup"]
+    build:
+      context: .
+      dockerfile: Dockerfile.neural
+      target: neural-runtime
+    image: bhashavox:neural-local
+    stdin_open: true
+    tty: true
+    environment:
+      HF_HOME: /home/app/.cache/huggingface
+    volumes:
+      - hf-cache:/home/app/.cache/huggingface
+    entrypoint: ["hf", "auth", "login"]
+
+volumes:
+  hf-cache:
