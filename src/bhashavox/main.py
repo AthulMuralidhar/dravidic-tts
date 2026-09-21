@@ -6,7 +6,7 @@ import io
 from pathlib import Path
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -45,8 +45,10 @@ def create_app(
         return FileResponse(static_directory / "index.html")
 
     @app.get("/api/v1/health", response_model=HealthResponse)
-    async def health() -> HealthResponse:
+    async def health(response: Response) -> HealthResponse:
         ready = active_provider.ready
+        if not ready:
+            response.status_code = 503
         return HealthResponse(
             status="ok" if ready else "degraded",
             version=__version__,

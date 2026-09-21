@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 
 from bhashavox.config import Settings
 from bhashavox.main import create_app
+from bhashavox.providers.espeak import EspeakProvider
 from bhashavox.providers.tone import ToneProvider
 
 
@@ -25,6 +26,18 @@ def test_health_and_capabilities() -> None:
     assert health.json()["provider"] == "tone"
     assert capabilities.json()["languages"] == ["en", "ta", "ml"]
     assert capabilities.json()["supports_mixed_native_scripts"] is True
+
+
+def test_health_is_unavailable_when_provider_is_not_ready() -> None:
+    app = create_app(
+        settings=Settings(provider="espeak"),
+        provider=EspeakProvider(executable="definitely-not-installed"),
+    )
+    with TestClient(app) as client:
+        response = client.get("/api/v1/health")
+
+    assert response.status_code == 503
+    assert response.json()["status"] == "degraded"
 
 
 def test_browser_ui_is_served() -> None:
