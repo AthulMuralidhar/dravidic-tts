@@ -22,6 +22,7 @@ models/
 Thumbs.db
 .idea/
 .vscode/
+.codex-remote-attachments/
 
 # Frontend tooling (if introduced later)
 node_modules/
