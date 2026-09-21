@@ -2,6 +2,7 @@ const form = document.querySelector("#speech-form");
 const textInput = document.querySelector("#text");
 const characterCount = document.querySelector("#character-count");
 const providerStatus = document.querySelector("#provider-status");
+const testModeWarning = document.querySelector("#test-mode-warning");
 const voiceSelect = document.querySelector("#voice");
 const voiceHelp = document.querySelector("#voice-help");
 const speedInput = document.querySelector("#speed");
@@ -53,7 +54,9 @@ function setBusy(busy) {
   generateButton.disabled = busy;
   generateButton.firstElementChild.textContent = busy
     ? "Generating…"
-    : "Generate speech";
+    : capabilities?.provider === "tone"
+      ? "Generate test tone"
+      : "Generate speech";
 }
 
 async function loadCapabilities() {
@@ -66,6 +69,11 @@ async function loadCapabilities() {
     providerStatus.lastChild.textContent = capabilities.ready
       ? ` ${capabilities.provider} ready`
       : ` ${capabilities.provider} unavailable`;
+    const testMode = capabilities.provider === "tone";
+    testModeWarning.hidden = !testMode;
+    generateButton.firstElementChild.textContent = testMode
+      ? "Generate test tone"
+      : "Generate speech";
     generateButton.disabled = !capabilities.ready;
     updateCharacterCount();
     updateVoices();

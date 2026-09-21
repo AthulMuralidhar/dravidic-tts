@@ -48,6 +48,7 @@ def test_browser_ui_is_served() -> None:
     assert "BhashaVox" in response.text
     assert "தமிழ்" in response.text
     assert "മലയാളം" in response.text
+    assert "tones, not spoken" in response.text
 
 
 def test_speech_returns_combined_wav() -> None:

@@ -147,6 +147,19 @@ h1 em {
   box-shadow: var(--shadow);
 }
 
+.test-mode-warning {
+  padding: 16px clamp(24px, 5vw, 52px);
+  color: #6b2a18;
+  background: #ffe1d5;
+  border-bottom: 1px solid #efad96;
+  font-size: 14px;
+  font-weight: 760;
+}
+
+.test-mode-warning[hidden] {
+  display: none;
+}
+
 form {
   padding: clamp(24px, 5vw, 52px);
 }
