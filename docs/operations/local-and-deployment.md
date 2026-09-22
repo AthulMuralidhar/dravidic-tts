@@ -6,11 +6,17 @@ Prerequisites: Docker Desktop (Windows/macOS) or Docker Engine with Compose
 (Linux).
 
 ```bash
-docker compose up --build
+docker compose build bhashavox
+docker compose --profile setup run --rm hf-login
+docker compose up -d bhashavox
 ```
 
-Open <http://localhost:8000>. The container includes eSpeak NG and needs no
-GPU, cloud account, model download, volume, or database.
+Accept the access conditions for `ai4bharat/indic-parler-tts` in the same
+Hugging Face account before login. Enter a read token only in the local login
+prompt; never put it in source files, Compose configuration, image build
+arguments, or chat. Open <http://localhost:8000>. The first neural request
+downloads the gated checkpoint into the persistent `hf-cache` Docker volume.
+Later container rebuilds reuse that cache.
 
 Stop it with:
 
@@ -23,8 +29,10 @@ To expose another host port, copy `.env.example` to `.env` and change
 
 ## Local development without Docker
 
-Python 3.11 or newer is required. eSpeak NG must be installed and available as
-`espeak-ng` on `PATH` for actual speech.
+Python 3.11 or newer is required. The host dependencies for Indic Parler are
+intentionally managed by `Dockerfile.neural`. Direct host development uses the
+smaller eSpeak or tone provider unless neural dependencies are installed
+separately. eSpeak NG must be available as `espeak-ng` on `PATH` when selected.
 
 PowerShell:
 
@@ -53,17 +61,20 @@ Health and API documentation:
 
 ## Container deployment later
 
-BhashaVox is a stateless HTTP container. A basic container platform needs only:
+BhashaVox currently retains speech-job state and completed audio in process
+memory. A basic single-replica container platform needs:
 
 1. build `Dockerfile` from the repository root;
 2. expose container port `8000`;
 3. use `/api/v1/health` as the health check;
-4. set environment variables if defaults need changing.
+4. provide the gated-model credential as a secret and mount a model cache;
+5. set environment variables if defaults need changing.
 
-The generated audio is streamed in the response and is not stored on disk.
-Consequently, the starter service needs no persistent volume and can be
-replaced or scaled horizontally. eSpeak synthesis is CPU-only; begin with one
-worker and measure concurrent load before adding workers.
+The browser submits a background job, polls its status, and downloads the WAV
+when complete. A refresh or brief network interruption is safe because the
+browser remembers the active job ID. A container restart still loses in-memory
+jobs and audio. Do not scale horizontally until job metadata and generated
+files move to shared durable storage and requests are routed consistently.
 
 Required production edge controls for a public deployment:
 
@@ -83,7 +94,7 @@ inference worker or endpoint, while retaining the same provider interface.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `BHASHAVOX_TTS_PROVIDER` | `espeak` | Speech backend (`espeak`; `tone` is testing only) |
+| `BHASHAVOX_TTS_PROVIDER` | Compose: `indic-parler` | Speech backend (`indic-parler`, `espeak`; `tone` is testing only) |
 | `BHASHAVOX_MAX_CHARACTERS` | `5000` | Per-request Unicode character limit |
 | `BHASHAVOX_HOST` | `0.0.0.0` | Bind address outside Compose |
 | `BHASHAVOX_PORT` | `8000` | Service port outside Compose |
@@ -91,8 +102,7 @@ inference worker or endpoint, while retaining the same provider interface.
 
 ## Current-machine note
 
-On 2026-09-21 the Docker CLI and Compose plugin were present, but the Docker
-engine was not running. The image definition and Compose configuration can be
-validated statically; an end-to-end container smoke test requires starting
-Docker Desktop first.
-
+On 2026-09-22 the CPU-only neural image, gated checkpoint download, Malayalam
+synthesis, resumable job API, LAN browser access, and persistent model cache
+were verified on Docker Desktop. A warm short Malayalam request took 41.9
+seconds. Long-form latency and listening quality remain under evaluation.

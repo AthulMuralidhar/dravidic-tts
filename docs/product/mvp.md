@@ -11,8 +11,11 @@ generate speech locally, listen in the browser, and download the WAV file.
 - Auto-detection of Latin, Tamil, and Malayalam script.
 - Explicit English, Tamil, or Malayalam override.
 - Script-aware segmentation for mixed input.
-- A CPU-friendly eSpeak NG speech provider.
+- A CPU-only AI4Bharat Indic Parler-TTS speech provider with English, Tamil,
+  and Malayalam voices.
 - Browser playback and WAV download.
+- Resumable background generation with queued/running/completed/failed states.
+- Sentence-aware chunking and visible per-chunk progress for long text.
 - A capabilities endpoint so the UI reflects the configured provider.
 - A health endpoint for local Docker and future hosting.
 - Request limits and useful validation messages.
@@ -26,9 +29,10 @@ generate speech locally, listen in the browser, and download the WAV file.
 - Voice cloning or uploaded reference audio.
 - Accounts, saved history, billing, and analytics.
 - Public anonymous deployment protections.
-- Background queues and distributed workers.
+- Durable background queues and distributed workers; the local MVP queue is
+  in memory and runs one neural job at a time.
 - MP3/Opus output.
-- A bundled Indic Parler-TTS image before hardware benchmarks.
+- Multi-replica deployment before durable job and audio storage exists.
 
 ## Initial API contract
 
@@ -58,6 +62,14 @@ JSON request:
 Successful response: `audio/wav` with a download filename. Validation errors
 use standard JSON problem details and never echo more text than necessary.
 
+The browser uses the reconnect-safe job contract instead:
+
+- `POST /api/v1/speech/jobs` creates a job and immediately returns HTTP 202.
+- `GET /api/v1/speech/jobs/{id}` returns state and chunk progress.
+- `GET /api/v1/speech/jobs/{id}/audio` returns the completed WAV.
+
+The direct speech endpoint remains available for short API clients.
+
 ## MVP acceptance checks
 
 1. `docker compose up --build` starts a healthy service.
@@ -66,4 +78,3 @@ use standard JSON problem details and never echo more text than necessary.
 4. A mixed-script example produces one combined output.
 5. Blank or oversized text receives a clear error.
 6. Automated tests pass without a network connection or model download.
-
