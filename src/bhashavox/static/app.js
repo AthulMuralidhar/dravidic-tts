@@ -174,8 +174,10 @@ async function trackJob(jobId) {
       message.textContent = "Queued on the laptop. You can leave this page and return.";
     } else if (job.status === "running") {
       setBusy(true, "Generating…");
-      message.textContent =
-        "Generating on the laptop. You can leave this page and return.";
+      const progress = job.chunks_total
+        ? ` Chunk ${Math.min(job.chunks_completed + 1, job.chunks_total)} of ${job.chunks_total}.`
+        : "";
+      message.textContent = `Generating on the laptop.${progress} You can leave this page and return.`;
     } else if (job.status === "failed") {
       window.localStorage.removeItem(activeJobKey);
       setBusy(false);

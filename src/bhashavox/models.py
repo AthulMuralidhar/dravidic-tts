@@ -52,6 +52,8 @@ class SpeechJobResponse(BaseModel):
     id: str
     status: SpeechJobStatus
     text_corrected: bool
+    chunks_completed: int = 0
+    chunks_total: int | None = None
     segment_count: int | None = None
     audio_url: str | None = None
     error: str | None = None

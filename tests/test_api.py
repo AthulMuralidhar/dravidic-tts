@@ -85,6 +85,8 @@ def test_background_speech_job_survives_separate_status_requests() -> None:
             job = client.get(f"/api/v1/speech/jobs/{job['id']}").json()
 
         assert job["status"] == "completed"
+        assert job["chunks_completed"] == 1
+        assert job["chunks_total"] == 1
         assert job["audio_url"] == f"/api/v1/speech/jobs/{job['id']}/audio"
         audio = client.get(job["audio_url"])
 

@@ -144,6 +144,8 @@ def create_app(
             id=job.id,
             status=job.status,
             text_corrected=job.text_corrected,
+            chunks_completed=job.chunks_completed,
+            chunks_total=job.chunks_total,
             segment_count=job.segment_count,
             audio_url=(
                 f"/api/v1/speech/jobs/{job.id}/audio"

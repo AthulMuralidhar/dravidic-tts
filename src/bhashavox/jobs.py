@@ -23,6 +23,8 @@ class SpeechJobSnapshot:
     id: str
     status: JobStatus
     text_corrected: bool
+    chunks_completed: int = 0
+    chunks_total: int | None = None
     segment_count: int | None = None
     audio: bytes | None = None
     error: str | None = None
@@ -33,6 +35,8 @@ class _SpeechJob:
     id: str
     status: JobStatus
     text_corrected: bool
+    chunks_completed: int = 0
+    chunks_total: int | None = None
     segment_count: int | None = None
     audio: bytes | None = None
     error: str | None = None
@@ -42,6 +46,8 @@ class _SpeechJob:
             id=self.id,
             status=self.status,
             text_corrected=self.text_corrected,
+            chunks_completed=self.chunks_completed,
+            chunks_total=self.chunks_total,
             segment_count=self.segment_count,
             audio=self.audio,
             error=self.error,
@@ -99,7 +105,17 @@ class SpeechJobManager:
     ) -> None:
         self._update(job_id, status="running")
         try:
-            result = self._service.synthesize(text, language, voice, speed)
+            result = self._service.synthesize(
+                text,
+                language,
+                voice,
+                speed,
+                progress_callback=lambda completed, total: self._update_progress(
+                    job_id,
+                    completed,
+                    total,
+                ),
+            )
         except (ValueError, ProviderUnavailable) as exc:
             self._update(job_id, status="failed", error=str(exc))
         except Exception:
@@ -132,6 +148,12 @@ class SpeechJobManager:
             job.audio = audio
             job.segment_count = segment_count
             job.error = error
+
+    def _update_progress(self, job_id: str, completed: int, total: int) -> None:
+        with self._lock:
+            job = self._jobs[job_id]
+            job.chunks_completed = completed
+            job.chunks_total = total
 
     def _discard_old_jobs(self) -> None:
         removable = [

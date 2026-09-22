@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from bhashavox.audio import join_wav
-from bhashavox.language import LanguageChoice, choose_segments
+from bhashavox.language import LanguageChoice, choose_segments, chunk_segments
 from bhashavox.providers.base import SpeechProvider
 
 
@@ -25,18 +26,23 @@ class SpeechService:
         language: LanguageChoice,
         voice: str | None,
         speed: float,
+        progress_callback: Callable[[int, int], None] | None = None,
     ) -> SpeechResult:
-        segments = choose_segments(text, language)
+        segments = chunk_segments(choose_segments(text, language))
         if not segments:
             raise ValueError("text does not contain speakable characters")
-        chunks = [
-            self.provider.synthesize(
-                segment.text,
-                segment.language,
-                voice if language != "auto" else None,
-                speed,
+        if progress_callback:
+            progress_callback(0, len(segments))
+        chunks: list[bytes] = []
+        for index, segment in enumerate(segments, start=1):
+            chunks.append(
+                self.provider.synthesize(
+                    segment.text,
+                    segment.language,
+                    voice if language != "auto" else None,
+                    speed,
+                )
             )
-            for segment in segments
-        ]
+            if progress_callback:
+                progress_callback(index, len(segments))
         return SpeechResult(audio=join_wav(chunks), segment_count=len(segments))
-
