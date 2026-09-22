@@ -2,7 +2,7 @@
 
 Research date: 2026-09-21
 
-This document records the evidence behind BhashaVox's initial speech-engine
+This document records the evidence behind Dravidic TTS's initial speech-engine
 strategy. It is a snapshot, not a permanent claim: model cards, access terms,
 weights, and inference support can change.
 
@@ -45,7 +45,7 @@ states that:
 - it is not currently served by a Hugging Face inference provider.
 
 Those properties make it a strong local-quality target but a poor hard
-dependency for first boot. BhashaVox therefore exposes a provider interface:
+dependency for first boot. Dravidic TTS therefore exposes a provider interface:
 the application can start with eSpeak NG, while Indic Parler-TTS can be added
 as an optional image/profile once its exact CPU performance and memory use are
 measured on target hardware.
@@ -128,7 +128,7 @@ it contained Malayalam pre-base vowel marks in invalid copy/paste order (for
 example, forms shaped like `െ` or `േ` appearing before the consonant they
 modify) and question marks where conjunct characters had been lost. This is
 typical of text extracted from some PDFs, legacy-font documents, or faulty OCR.
-Unicode NFC alone cannot restore missing characters. BhashaVox needs a review
+Unicode NFC alone cannot restore missing characters. Dravidic TTS needs a review
 stage that can safely reorder deterministic vowel-mark corruption and flag
 irrecoverable characters before synthesis.
 

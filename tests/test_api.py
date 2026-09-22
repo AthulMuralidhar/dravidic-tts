@@ -4,10 +4,10 @@ import wave
 
 from fastapi.testclient import TestClient
 
-from bhashavox.config import Settings
-from bhashavox.main import create_app
-from bhashavox.providers.espeak import EspeakProvider
-from bhashavox.providers.tone import ToneProvider
+from dravidic_tts.config import Settings
+from dravidic_tts.main import create_app
+from dravidic_tts.providers.espeak import EspeakProvider
+from dravidic_tts.providers.tone import ToneProvider
 
 
 def make_client(max_characters: int = 100) -> TestClient:
@@ -46,7 +46,7 @@ def test_browser_ui_is_served() -> None:
         response = client.get("/")
 
     assert response.status_code == 200
-    assert "BhashaVox" in response.text
+    assert "Dravidic TTS" in response.text
     assert "தமிழ்" in response.text
     assert "മലയാളം" in response.text
     assert "tones, not spoken" in response.text
@@ -61,7 +61,7 @@ def test_speech_returns_combined_wav() -> None:
 
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("audio/wav")
-    assert response.headers["x-bhashavox-segments"] == "3"
+    assert response.headers["x-dravidic-tts-segments"] == "3"
     with wave.open(io.BytesIO(response.content), "rb") as audio:
         assert audio.getnframes() > 0
 
@@ -92,7 +92,7 @@ def test_background_speech_job_survives_separate_status_requests() -> None:
 
     assert audio.status_code == 200
     assert audio.headers["content-type"].startswith("audio/wav")
-    assert audio.headers["x-bhashavox-text-corrected"] == "true"
+    assert audio.headers["x-dravidic-tts-text-corrected"] == "true"
     with wave.open(io.BytesIO(audio.content), "rb") as generated:
         assert generated.getnframes() > 0
 
@@ -130,7 +130,7 @@ def test_speech_corrects_safe_copy_paste_damage_before_audio() -> None:
         )
 
     assert response.status_code == 200
-    assert response.headers["x-bhashavox-text-corrected"] == "true"
+    assert response.headers["x-dravidic-tts-text-corrected"] == "true"
 
 
 def test_speech_automatically_restores_missing_malayalam_glyphs() -> None:
@@ -141,7 +141,7 @@ def test_speech_automatically_restores_missing_malayalam_glyphs() -> None:
         )
 
     assert response.status_code == 200
-    assert response.headers["x-bhashavox-text-corrected"] == "true"
+    assert response.headers["x-dravidic-tts-text-corrected"] == "true"
 
 
 def test_rejects_blank_and_oversized_text() -> None:

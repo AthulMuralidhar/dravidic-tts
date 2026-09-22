@@ -5,9 +5,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from bhashavox.audio import join_wav
-from bhashavox.language import LanguageChoice, choose_segments, chunk_segments
-from bhashavox.providers.base import SpeechProvider
+from dravidic_tts.audio import join_wav
+from dravidic_tts.language import LanguageChoice, choose_segments, chunk_segments
+from dravidic_tts.providers.base import SpeechProvider
 
 
 @dataclass(frozen=True, slots=True)

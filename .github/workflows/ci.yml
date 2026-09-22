@@ -29,5 +29,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build container image
-        run: docker build --tag bhashavox:ci .
-
+        run: docker build --tag dravidic-tts:ci .

@@ -15,7 +15,7 @@ const download = document.querySelector("#download");
 
 let capabilities = null;
 let audioUrl = null;
-const activeJobKey = "bhashavox.activeSpeechJob";
+const activeJobKey = "dravidic-tts.activeSpeechJob";
 
 function selectedLanguage() {
   return form.elements.language.value;

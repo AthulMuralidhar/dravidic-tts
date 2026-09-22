@@ -13,10 +13,10 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
-from bhashavox import __version__
-from bhashavox.config import Settings
-from bhashavox.jobs import SpeechJobManager, SpeechJobSnapshot
-from bhashavox.models import (
+from dravidic_tts import __version__
+from dravidic_tts.config import Settings
+from dravidic_tts.jobs import SpeechJobManager, SpeechJobSnapshot
+from dravidic_tts.models import (
     CapabilitiesResponse,
     HealthResponse,
     SpeechJobResponse,
@@ -26,10 +26,10 @@ from bhashavox.models import (
     TextReviewResponse,
     Voice,
 )
-from bhashavox.providers.base import ProviderUnavailable, SpeechProvider
-from bhashavox.providers.factory import create_provider
-from bhashavox.service import SpeechService
-from bhashavox.text import review_text
+from dravidic_tts.providers.base import ProviderUnavailable, SpeechProvider
+from dravidic_tts.providers.factory import create_provider
+from dravidic_tts.service import SpeechService
+from dravidic_tts.text import review_text
 
 
 def create_app(
@@ -47,7 +47,7 @@ def create_app(
         job_manager.close()
 
     app = FastAPI(
-        title="BhashaVox",
+        title="Dravidic TTS",
         version=__version__,
         description="Local-first English, Tamil, and Malayalam text to speech.",
         lifespan=lifespan,
@@ -133,9 +133,9 @@ def create_app(
             io.BytesIO(result.audio),
             media_type="audio/wav",
             headers={
-                "Content-Disposition": 'attachment; filename="bhashavox.wav"',
-                "X-BhashaVox-Segments": str(result.segment_count),
-                "X-BhashaVox-Text-Corrected": str(text_review.changed).lower(),
+                "Content-Disposition": 'attachment; filename="dravidic-tts.wav"',
+                "X-Dravidic-TTS-Segments": str(result.segment_count),
+                "X-Dravidic-TTS-Text-Corrected": str(text_review.changed).lower(),
             },
         )
 
@@ -202,9 +202,9 @@ def create_app(
             content=job.audio,
             media_type="audio/wav",
             headers={
-                "Content-Disposition": 'attachment; filename="bhashavox.wav"',
-                "X-BhashaVox-Segments": str(job.segment_count or 0),
-                "X-BhashaVox-Text-Corrected": str(job.text_corrected).lower(),
+                "Content-Disposition": 'attachment; filename="dravidic-tts.wav"',
+                "X-Dravidic-TTS-Segments": str(job.segment_count or 0),
+                "X-Dravidic-TTS-Text-Corrected": str(job.text_corrected).lower(),
             },
         )
 
@@ -217,7 +217,7 @@ app = create_app()
 def run() -> None:
     settings = Settings.from_env()
     uvicorn.run(
-        "bhashavox.main:app",
+        "dravidic_tts.main:app",
         host=settings.host,
         port=settings.port,
         reload=False,

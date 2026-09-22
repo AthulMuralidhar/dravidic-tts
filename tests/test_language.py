@@ -1,6 +1,6 @@
 import unicodedata
 
-from bhashavox.language import (
+from dravidic_tts.language import (
     TextSegment,
     choose_segments,
     chunk_segments,

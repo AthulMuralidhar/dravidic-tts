@@ -1,6 +1,6 @@
-# BhashaVox
+# Dravidic TTS
 
-BhashaVox is a local-first, open-source web app that turns pasted text into
+Dravidic TTS is a local-first, open-source web app that turns pasted text into
 downloadable speech. The first-class languages are English, Tamil, and
 Malayalam, including mixed-script documents.
 
@@ -21,11 +21,11 @@ are kept in [`docs/`](docs/) so the work remains easy to resume.
 With Docker Desktop or Docker Engine running:
 
 ```bash
-docker compose up --build
+docker compose up --build dravidic-tts
 ```
 
-Then open <http://localhost:8000>. The starter image uses eSpeak NG, so it is
-CPU-only and does not need model credentials or a GPU.
+Then open <http://localhost:8000>. Compose uses the neural Indic Parler image;
+follow the one-time gated-model setup in the operations guide first.
 
 See [`docs/operations/local-and-deployment.md`](docs/operations/local-and-deployment.md)
 for non-Docker development, configuration, verification, and deployment notes.
@@ -37,8 +37,8 @@ for non-Docker development, configuration, verification, and deployment notes.
 - [TTS model and transliteration research](docs/research/tts-landscape.md)
 - [Current session handoff](docs/session-notes/2026-09-21.md)
 
-The initial provider is intentionally modest but dependable. AI4Bharat Indic
-Parler-TTS is the planned high-quality provider after local CPU/GPU benchmarks.
+The current neural provider is AI4Bharat Indic Parler-TTS. The provider
+interface remains replaceable so faster local or hosted inference can be added.
 
 ## License
 

@@ -14,10 +14,10 @@ FROM python:3.11-slim AS runtime
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    BHASHAVOX_HOST=0.0.0.0 \
-    BHASHAVOX_PORT=8000 \
-    BHASHAVOX_TTS_PROVIDER=espeak \
-    BHASHAVOX_MAX_CHARACTERS=5000
+    DRAVIDIC_TTS_HOST=0.0.0.0 \
+    DRAVIDIC_TTS_PORT=8000 \
+    DRAVIDIC_TTS_PROVIDER=espeak \
+    DRAVIDIC_TTS_MAX_CHARACTERS=5000
 
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends espeak-ng \
@@ -33,5 +33,4 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD ["python", "-c", "import json,urllib.request; data=json.load(urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=3)); assert data['status']=='ok'"]
 
-CMD ["uvicorn", "bhashavox.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-server-header"]
-
+CMD ["uvicorn", "dravidic_tts.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-server-header"]

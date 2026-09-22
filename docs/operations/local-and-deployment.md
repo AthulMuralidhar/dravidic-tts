@@ -6,9 +6,9 @@ Prerequisites: Docker Desktop (Windows/macOS) or Docker Engine with Compose
 (Linux).
 
 ```bash
-docker compose build bhashavox
+docker compose build dravidic-tts
 docker compose --profile setup run --rm hf-login
-docker compose up -d bhashavox
+docker compose up -d dravidic-tts
 ```
 
 Accept the access conditions for `ai4bharat/indic-parler-tts` in the same
@@ -25,7 +25,7 @@ docker compose down
 ```
 
 To expose another host port, copy `.env.example` to `.env` and change
-`BHASHAVOX_BIND_PORT`.
+`DRAVIDIC_TTS_BIND_PORT`.
 
 ## Local development without Docker
 
@@ -39,19 +39,19 @@ PowerShell:
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
-$env:BHASHAVOX_TTS_PROVIDER = "espeak"
-.\.venv\Scripts\python.exe -m uvicorn bhashavox.main:app --reload
+$env:DRAVIDIC_TTS_PROVIDER = "espeak"
+.\.venv\Scripts\python.exe -m uvicorn dravidic_tts.main:app --reload
 ```
 
 For UI/API development when eSpeak NG is unavailable, use
-`BHASHAVOX_TTS_PROVIDER=tone`. It generates test tones, not spoken words.
+`DRAVIDIC_TTS_PROVIDER=tone`. It generates test tones, not spoken words.
 
 ## Verification
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest
 .\.venv\Scripts\python.exe -m ruff check .
-node --check src/bhashavox/static/app.js
+node --check src/dravidic_tts/static/app.js
 ```
 
 Health and API documentation:
@@ -61,7 +61,7 @@ Health and API documentation:
 
 ## Container deployment later
 
-BhashaVox currently retains speech-job state and completed audio in process
+Dravidic TTS currently retains speech-job state and completed audio in process
 memory. A basic single-replica container platform needs:
 
 1. build `Dockerfile` from the repository root;
@@ -94,11 +94,12 @@ inference worker or endpoint, while retaining the same provider interface.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `BHASHAVOX_TTS_PROVIDER` | Compose: `indic-parler` | Speech backend (`indic-parler`, `espeak`; `tone` is testing only) |
-| `BHASHAVOX_MAX_CHARACTERS` | `5000` | Per-request Unicode character limit |
-| `BHASHAVOX_HOST` | `0.0.0.0` | Bind address outside Compose |
-| `BHASHAVOX_PORT` | `8000` | Service port outside Compose |
-| `BHASHAVOX_BIND_PORT` | `8000` | Host-side port used by Compose |
+| `DRAVIDIC_TTS_PROVIDER` | Compose: `indic-parler` | Speech backend (`indic-parler`, `espeak`; `tone` is testing only) |
+| `DRAVIDIC_TTS_MAX_CHARACTERS` | `5000` | Per-request Unicode character limit |
+| `DRAVIDIC_TTS_HOST` | `0.0.0.0` | Bind address outside Compose |
+| `DRAVIDIC_TTS_PORT` | `8000` | Service port outside Compose |
+| `DRAVIDIC_TTS_BIND_PORT` | `8000` | Host-side port used by Compose |
+| `DRAVIDIC_TTS_PARLER_MODEL` | `ai4bharat/indic-parler-tts` | Optional neural model ID override |
 
 ## Current-machine note
 

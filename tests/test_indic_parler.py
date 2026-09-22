@@ -1,4 +1,4 @@
-from bhashavox.providers.indic_parler import IndicParlerProvider, _description
+from dravidic_tts.providers.indic_parler import IndicParlerProvider, _description
 
 
 def test_exposes_recommended_voices_for_all_product_languages() -> None:

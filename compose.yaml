@@ -1,16 +1,16 @@
 services:
-  bhashavox:
+  dravidic-tts:
     build:
       context: .
       dockerfile: Dockerfile.neural
       target: neural-runtime
-    image: bhashavox:neural-local
+    image: dravidic-tts:neural-local
     init: true
     ports:
-      - "${BHASHAVOX_BIND_PORT:-8000}:8000"
+      - "${DRAVIDIC_TTS_BIND_PORT:-8000}:8000"
     environment:
-      BHASHAVOX_TTS_PROVIDER: "${BHASHAVOX_TTS_PROVIDER:-indic-parler}"
-      BHASHAVOX_MAX_CHARACTERS: "${BHASHAVOX_MAX_CHARACTERS:-5000}"
+      DRAVIDIC_TTS_PROVIDER: "${DRAVIDIC_TTS_PROVIDER:-indic-parler}"
+      DRAVIDIC_TTS_MAX_CHARACTERS: "${DRAVIDIC_TTS_MAX_CHARACTERS:-5000}"
       HF_HOME: /home/app/.cache/huggingface
     volumes:
       - hf-cache:/home/app/.cache/huggingface
@@ -40,7 +40,7 @@ services:
       context: .
       dockerfile: Dockerfile.neural
       target: neural-runtime
-    image: bhashavox:neural-local
+    image: dravidic-tts:neural-local
     stdin_open: true
     tty: true
     environment:

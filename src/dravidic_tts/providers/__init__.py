@@ -1,6 +1,5 @@
 """Speech provider implementations."""
 
-from bhashavox.providers.base import ProviderUnavailable, SpeechProvider
+from dravidic_tts.providers.base import ProviderUnavailable, SpeechProvider
 
 __all__ = ["ProviderUnavailable", "SpeechProvider"]
-

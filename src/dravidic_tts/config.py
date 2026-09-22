@@ -16,10 +16,10 @@ class Settings:
     @classmethod
     def from_env(cls) -> Settings:
         return cls(
-            provider=os.getenv("BHASHAVOX_TTS_PROVIDER", "espeak").strip().lower(),
-            max_characters=_positive_int("BHASHAVOX_MAX_CHARACTERS", 5_000),
-            host=os.getenv("BHASHAVOX_HOST", "0.0.0.0"),
-            port=_positive_int("BHASHAVOX_PORT", 8000),
+            provider=os.getenv("DRAVIDIC_TTS_PROVIDER", "espeak").strip().lower(),
+            max_characters=_positive_int("DRAVIDIC_TTS_MAX_CHARACTERS", 5_000),
+            host=os.getenv("DRAVIDIC_TTS_HOST", "0.0.0.0"),
+            port=_positive_int("DRAVIDIC_TTS_PORT", 8000),
         )
 
 
@@ -34,4 +34,3 @@ def _positive_int(name: str, default: int) -> int:
     if value <= 0:
         raise ValueError(f"{name} must be greater than zero")
     return value
-

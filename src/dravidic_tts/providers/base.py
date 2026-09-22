@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from bhashavox.language import Language
+from dravidic_tts.language import Language
 
 
 class ProviderUnavailable(RuntimeError):
@@ -41,4 +41,3 @@ class SpeechProvider(ABC):
         speed: float,
     ) -> bytes:
         """Return one PCM WAV document."""
-

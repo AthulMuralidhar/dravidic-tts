@@ -8,8 +8,8 @@ import os
 import threading
 from typing import Any
 
-from bhashavox.language import Language
-from bhashavox.providers.base import (
+from dravidic_tts.language import Language
+from dravidic_tts.providers.base import (
     ProviderUnavailable,
     ProviderVoice,
     SpeechProvider,
@@ -38,7 +38,7 @@ class IndicParlerProvider(SpeechProvider):
 
     def __init__(self, model_id: str | None = None) -> None:
         self.model_id = model_id or os.getenv(
-            "BHASHAVOX_PARLER_MODEL", DEFAULT_MODEL_ID
+            "DRAVIDIC_TTS_PARLER_MODEL", DEFAULT_MODEL_ID
         )
         self._model: Any | None = None
         self._prompt_tokenizer: Any | None = None

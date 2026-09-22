@@ -5,7 +5,7 @@
 
 ## Context
 
-BhashaVox must run locally first, including on a machine where no NVIDIA GPU
+Dravidic TTS must run locally first, including on a machine where no NVIDIA GPU
 has been detected. It must also be straightforward to deploy later. The best
 quality candidate model is materially heavier than the web application, has
 separate access conditions, and may need GPU acceleration in production.
@@ -37,7 +37,7 @@ weights later.
 
 ```text
 Browser
-  -> BhashaVox HTTP service
+  -> Dravidic TTS HTTP service
        -> text validation and script-aware segmentation
        -> configured SpeechProvider
             -> eSpeak NG (local/CPU MVP)
@@ -47,7 +47,7 @@ Browser
 ```
 
 The same container contract works on a laptop, Docker Compose, or a container
-host. A deployment can replace only `BHASHAVOX_TTS_PROVIDER` and provider
+host. A deployment can replace only `DRAVIDIC_TTS_PROVIDER` and provider
 credentials/endpoints while keeping the public API and browser unchanged.
 
 ## Deployment constraints
@@ -78,4 +78,3 @@ Trade-offs:
   measuring real latency would add unnecessary operational complexity.
 - Provider capabilities differ, so the API must advertise available voices
   and controls instead of promising that every engine supports everything.
-

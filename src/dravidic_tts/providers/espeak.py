@@ -5,8 +5,8 @@ from __future__ import annotations
 import shutil
 import subprocess
 
-from bhashavox.language import Language
-from bhashavox.providers.base import (
+from dravidic_tts.language import Language
+from dravidic_tts.providers.base import (
     ProviderUnavailable,
     ProviderVoice,
     SpeechProvider,
@@ -76,4 +76,3 @@ class EspeakProvider(SpeechProvider):
             detail = result.stderr.decode("utf-8", errors="replace").strip()
             raise ProviderUnavailable(detail or "eSpeak NG synthesis failed")
         return result.stdout
-

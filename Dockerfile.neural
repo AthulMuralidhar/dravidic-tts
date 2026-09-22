@@ -24,10 +24,10 @@ FROM python:3.11-slim AS neural-runtime
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    BHASHAVOX_HOST=0.0.0.0 \
-    BHASHAVOX_PORT=8000 \
-    BHASHAVOX_TTS_PROVIDER=indic-parler \
-    BHASHAVOX_MAX_CHARACTERS=5000 \
+    DRAVIDIC_TTS_HOST=0.0.0.0 \
+    DRAVIDIC_TTS_PORT=8000 \
+    DRAVIDIC_TTS_PROVIDER=indic-parler \
+    DRAVIDIC_TTS_MAX_CHARACTERS=5000 \
     HF_HOME=/home/app/.cache/huggingface \
     PATH="/opt/venv/bin:$PATH"
 
@@ -43,4 +43,4 @@ USER app
 WORKDIR /home/app
 EXPOSE 8000
 
-CMD ["uvicorn", "bhashavox.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-server-header"]
+CMD ["uvicorn", "dravidic_tts.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-server-header"]

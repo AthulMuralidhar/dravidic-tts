@@ -14,7 +14,7 @@ different inputs:
 The first type can use direct extraction. The second requires page rendering
 and OCR. The third should compare the embedded text with OCR quality signals
 instead of blindly trusting either source. All paths must pass through the
-existing BhashaVox Unicode repair, language segmentation, chunking, and speech
+existing Dravidic TTS Unicode repair, language segmentation, chunking, and speech
 job pipeline.
 
 ## Recommended open-source components
@@ -31,7 +31,7 @@ not unambiguous.
 The extractor must apply resource limits. The pypdf documentation reports that
 parsing a roughly 300 MB uncompressed content stream has required about 10 GB
 RAM in an observed case. Its current security defaults limit several decoded
-filter outputs, but BhashaVox should still enforce upload size, page count,
+filter outputs, but Dravidic TTS should still enforce upload size, page count,
 per-page processing time, and extracted-content limits.
 
 ### Scanned-page rendering: pypdfium2

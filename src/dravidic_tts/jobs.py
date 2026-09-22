@@ -9,9 +9,9 @@ from threading import Lock
 from typing import Literal
 from uuid import uuid4
 
-from bhashavox.language import LanguageChoice
-from bhashavox.providers.base import ProviderUnavailable
-from bhashavox.service import SpeechService
+from dravidic_tts.language import LanguageChoice
+from dravidic_tts.providers.base import ProviderUnavailable
+from dravidic_tts.service import SpeechService
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ class SpeechJobManager:
         self._lock = Lock()
         self._executor = ThreadPoolExecutor(
             max_workers=1,
-            thread_name_prefix="bhashavox-speech",
+            thread_name_prefix="dravidic-tts-speech",
         )
 
     def submit(

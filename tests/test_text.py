@@ -1,4 +1,4 @@
-from bhashavox.text import review_text
+from dravidic_tts.text import review_text
 
 
 def test_repairs_misordered_malayalam_prebase_vowels() -> None:

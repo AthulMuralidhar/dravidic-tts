@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from bhashavox.providers.base import SpeechProvider
-from bhashavox.providers.espeak import EspeakProvider
-from bhashavox.providers.indic_parler import IndicParlerProvider
-from bhashavox.providers.tone import ToneProvider
+from dravidic_tts.providers.base import SpeechProvider
+from dravidic_tts.providers.espeak import EspeakProvider
+from dravidic_tts.providers.indic_parler import IndicParlerProvider
+from dravidic_tts.providers.tone import ToneProvider
 
 
 def create_provider(name: str) -> SpeechProvider:

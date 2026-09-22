@@ -7,8 +7,8 @@ import math
 import struct
 import wave
 
-from bhashavox.language import Language
-from bhashavox.providers.base import ProviderVoice, SpeechProvider
+from dravidic_tts.language import Language
+from dravidic_tts.providers.base import ProviderVoice, SpeechProvider
 
 
 class ToneProvider(SpeechProvider):
@@ -56,4 +56,3 @@ class ToneProvider(SpeechProvider):
             target.setframerate(sample_rate)
             target.writeframes(frames)
         return output.getvalue()
-

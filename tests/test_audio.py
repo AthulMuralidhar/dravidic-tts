@@ -3,8 +3,8 @@ import wave
 
 import pytest
 
-from bhashavox.audio import IncompatibleAudioError, join_wav
-from bhashavox.providers.tone import ToneProvider
+from dravidic_tts.audio import IncompatibleAudioError, join_wav
+from dravidic_tts.providers.tone import ToneProvider
 
 
 def test_join_wav_combines_chunks_and_silence() -> None:
@@ -23,4 +23,3 @@ def test_join_wav_combines_chunks_and_silence() -> None:
 def test_join_wav_rejects_invalid_audio() -> None:
     with pytest.raises(IncompatibleAudioError):
         join_wav([b"not a wave"])
-
