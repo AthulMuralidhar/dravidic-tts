@@ -210,6 +210,15 @@ enough for long-form interactive use. Audio naturalness and Malayalam
 pronunciation still require user listening tests. Sentence chunking, progress
 reporting, and queued generation are required before testing long pasted text.
 
+The Windows host reports one display adapter: `AMD Radeon(TM) Pro Graphics`,
+with approximately 4 GB of adapter memory and driver 31.0.21921.11005. No
+NVIDIA device or `nvidia-smi` installation is present. Docker lists an NVIDIA
+container runtime, but a runtime entry does not supply compatible hardware.
+The current CPU-only PyTorch image reports CUDA unavailable, and the provider's
+accelerator path is CUDA-only, so this AMD adapter is not used. An AMD-specific
+DirectML or ROCm experiment would require a separate runtime and compatibility
+evaluation; it must not be assumed to work with this model or Docker setup.
+
 Additional sources:
 
 - [AI4Bharat IndicBART model card](https://huggingface.co/ai4bharat/IndicBART)
