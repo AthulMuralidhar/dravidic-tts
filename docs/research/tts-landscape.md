@@ -185,8 +185,30 @@ sequence: load the Parler model, tokenize transcript and voice description
 separately, generate waveform samples, and write 44.1 kHz model output to WAV.
 The implementation pins the Parler-TTS source revision used during research
 because its package currently pins Transformers 4.46.1. Actual Docker build and
-CPU inference results remain unverified and must be appended after the next
-session's experiment.
+CPU inference results are recorded below.
+
+## Neural runtime measurements — 2026-09-22
+
+The CPU-only neural image built successfully after isolating its Python
+dependencies in `/opt/venv`. Installing PyTorch and Torchaudio from the CPU
+wheel index before the remaining packages prevented pip from selecting a much
+larger CUDA dependency graph. The verified runtime contains PyTorch 2.5.1+cpu,
+Torchaudio 2.5.1+cpu, Transformers 4.46.1, and Parler-TTS 0.2.2. CUDA is not
+available on this host.
+
+Hugging Face authentication alone was insufficient for the gated checkpoint:
+metadata was readable while `config.json` still returned HTTP 403 until the
+same user account accepted the model's access conditions in a browser. After
+approval, the first short Malayalam request using the Anjali voice completed
+successfully. It included the one-time model download and load, took 451.3
+seconds, and produced a 240,684-byte WAV. A second short request in the warm
+process took 41.9 seconds and produced a 289,836-byte WAV. The health endpoint
+remained responsive during generation.
+
+These numbers establish that local CPU inference works, but not that it is fast
+enough for long-form interactive use. Audio naturalness and Malayalam
+pronunciation still require user listening tests. Sentence chunking, progress
+reporting, and queued generation are required before testing long pasted text.
 
 Additional sources:
 
