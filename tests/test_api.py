@@ -1,4 +1,5 @@
 import io
+import time
 import wave
 
 from fastapi.testclient import TestClient
@@ -63,6 +64,44 @@ def test_speech_returns_combined_wav() -> None:
     assert response.headers["x-bhashavox-segments"] == "3"
     with wave.open(io.BytesIO(response.content), "rb") as audio:
         assert audio.getnframes() > 0
+
+
+def test_background_speech_job_survives_separate_status_requests() -> None:
+    with make_client() as client:
+        created = client.post(
+            "/api/v1/speech/jobs",
+            json={"text": "രാ?തി", "language": "ml"},
+        )
+
+        assert created.status_code == 202
+        job = created.json()
+        assert job["status"] in {"queued", "running", "completed"}
+        assert job["text_corrected"] is True
+
+        deadline = time.monotonic() + 2
+        while job["status"] not in {"completed", "failed"}:
+            assert time.monotonic() < deadline
+            time.sleep(0.01)
+            job = client.get(f"/api/v1/speech/jobs/{job['id']}").json()
+
+        assert job["status"] == "completed"
+        assert job["audio_url"] == f"/api/v1/speech/jobs/{job['id']}/audio"
+        audio = client.get(job["audio_url"])
+
+    assert audio.status_code == 200
+    assert audio.headers["content-type"].startswith("audio/wav")
+    assert audio.headers["x-bhashavox-text-corrected"] == "true"
+    with wave.open(io.BytesIO(audio.content), "rb") as generated:
+        assert generated.getnframes() > 0
+
+
+def test_background_speech_job_reports_missing_and_incomplete_audio() -> None:
+    with make_client() as client:
+        missing = client.get("/api/v1/speech/jobs/not-a-job")
+        missing_audio = client.get("/api/v1/speech/jobs/not-a-job/audio")
+
+    assert missing.status_code == 404
+    assert missing_audio.status_code == 404
 
 
 def test_text_review_returns_safe_repairs_and_ambiguous_warnings() -> None:

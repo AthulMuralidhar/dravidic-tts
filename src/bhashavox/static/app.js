@@ -15,6 +15,7 @@ const download = document.querySelector("#download");
 
 let capabilities = null;
 let audioUrl = null;
+const activeJobKey = "bhashavox.activeSpeechJob";
 
 function selectedLanguage() {
   return form.elements.language.value;
@@ -50,13 +51,17 @@ function updateVoices() {
     : "This speech engine chooses the voice automatically.";
 }
 
-function setBusy(busy) {
+function setBusy(busy, label = "Generating…") {
   generateButton.disabled = busy;
   generateButton.firstElementChild.textContent = busy
-    ? "Generating…"
+    ? label
     : capabilities?.provider === "tone"
       ? "Generate test tone"
       : "Generate speech";
+}
+
+function wait(milliseconds) {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 }
 
 async function loadCapabilities() {
@@ -77,6 +82,13 @@ async function loadCapabilities() {
     generateButton.disabled = !capabilities.ready;
     updateCharacterCount();
     updateVoices();
+    const activeJobId = window.localStorage.getItem(activeJobKey);
+    if (activeJobId) {
+      trackJob(activeJobId).catch((error) => {
+        message.textContent = error.message || "Speech generation failed.";
+        setBusy(false);
+      });
+    }
   } catch (error) {
     providerStatus.classList.add("unavailable");
     providerStatus.lastChild.textContent = " Service unavailable";
@@ -93,6 +105,90 @@ function readError(response, body) {
     return body.detail;
   }
   return `Speech generation failed (${response.status}).`;
+}
+
+async function responseError(response) {
+  let body = null;
+  try {
+    body = await response.json();
+  } catch {
+    // readError includes the HTTP status when no JSON body is available.
+  }
+  return new Error(readError(response, body));
+}
+
+async function loadCompletedAudio(job) {
+  while (true) {
+    try {
+      const response = await fetch(job.audio_url, { cache: "no-store" });
+      if (!response.ok) throw await responseError(response);
+      const blob = await response.blob();
+      if (audioUrl) URL.revokeObjectURL(audioUrl);
+      audioUrl = URL.createObjectURL(blob);
+      audio.src = audioUrl;
+      download.href = audioUrl;
+      resultPanel.hidden = false;
+      resultPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      message.textContent = job.text_corrected
+        ? "Ready. Copy/paste damage was corrected before speech."
+        : "Your speech is ready.";
+      await audio.play().catch(() => undefined);
+      return;
+    } catch (error) {
+      if (error.message && !error.message.includes("Failed to fetch")) {
+        throw error;
+      }
+      message.textContent = "Audio is ready. Reconnecting to download it…";
+      await wait(3000);
+    }
+  }
+}
+
+async function trackJob(jobId) {
+  window.localStorage.setItem(activeJobKey, jobId);
+  setBusy(true, "Checking job…");
+
+  while (true) {
+    let job;
+    try {
+      const response = await fetch(`/api/v1/speech/jobs/${jobId}`, {
+        cache: "no-store",
+      });
+      if (!response.ok) throw await responseError(response);
+      job = await response.json();
+    } catch (error) {
+      if (error.message && !error.message.includes("Failed to fetch")) {
+        window.localStorage.removeItem(activeJobKey);
+        setBusy(false);
+        throw error;
+      }
+      setBusy(true, "Reconnecting…");
+      message.textContent =
+        "Connection interrupted. Generation continues on the laptop; reconnecting…";
+      await wait(3000);
+      continue;
+    }
+
+    if (job.status === "queued") {
+      setBusy(true, "Queued…");
+      message.textContent = "Queued on the laptop. You can leave this page and return.";
+    } else if (job.status === "running") {
+      setBusy(true, "Generating…");
+      message.textContent =
+        "Generating on the laptop. You can leave this page and return.";
+    } else if (job.status === "failed") {
+      window.localStorage.removeItem(activeJobKey);
+      setBusy(false);
+      throw new Error(job.error || "Speech generation failed.");
+    } else if (job.status === "completed") {
+      await loadCompletedAudio(job);
+      window.localStorage.removeItem(activeJobKey);
+      setBusy(false);
+      return;
+    }
+
+    await wait(2000);
+  }
 }
 
 form.addEventListener("change", (event) => {
@@ -134,37 +230,18 @@ form.addEventListener("submit", async (event) => {
       speed: Number(speedInput.value),
       format: "wav",
     };
-    const response = await fetch("/api/v1/speech", {
+    const response = await fetch("/api/v1/speech/jobs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    if (!response.ok) {
-      let body = null;
-      try {
-        body = await response.json();
-      } catch {
-        // The fallback below includes the HTTP status.
-      }
-      throw new Error(readError(response, body));
-    }
-
-    if (response.headers.get("X-BhashaVox-Text-Corrected") === "true") {
-      message.textContent = "Copy/paste damage was corrected before speech.";
-    }
-
-    const blob = await response.blob();
-    if (audioUrl) URL.revokeObjectURL(audioUrl);
-    audioUrl = URL.createObjectURL(blob);
-    audio.src = audioUrl;
-    download.href = audioUrl;
-    resultPanel.hidden = false;
-    resultPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    await audio.play().catch(() => undefined);
+    if (!response.ok) throw await responseError(response);
+    const job = await response.json();
+    await trackJob(job.id);
   } catch (error) {
     message.textContent = error.message || "Speech generation failed.";
   } finally {
-    setBusy(false);
+    if (!window.localStorage.getItem(activeJobKey)) setBusy(false);
   }
 });
 

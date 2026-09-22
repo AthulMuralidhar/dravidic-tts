@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import io
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import uvicorn
@@ -13,9 +15,11 @@ from fastapi.staticfiles import StaticFiles
 
 from bhashavox import __version__
 from bhashavox.config import Settings
+from bhashavox.jobs import SpeechJobManager, SpeechJobSnapshot
 from bhashavox.models import (
     CapabilitiesResponse,
     HealthResponse,
+    SpeechJobResponse,
     SpeechRequest,
     TextReviewIssue,
     TextReviewRequest,
@@ -35,11 +39,18 @@ def create_app(
     active_settings = settings or Settings.from_env()
     active_provider = provider or create_provider(active_settings.provider)
     speech_service = SpeechService(active_provider)
+    job_manager = SpeechJobManager(speech_service)
+
+    @asynccontextmanager
+    async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        yield
+        job_manager.close()
 
     app = FastAPI(
         title="BhashaVox",
         version=__version__,
         description="Local-first English, Tamil, and Malayalam text to speech.",
+        lifespan=lifespan,
     )
     static_directory = Path(__file__).parent / "static"
     app.mount("/static", StaticFiles(directory=static_directory), name="static")
@@ -125,6 +136,73 @@ def create_app(
                 "Content-Disposition": 'attachment; filename="bhashavox.wav"',
                 "X-BhashaVox-Segments": str(result.segment_count),
                 "X-BhashaVox-Text-Corrected": str(text_review.changed).lower(),
+            },
+        )
+
+    def job_response(job: SpeechJobSnapshot) -> SpeechJobResponse:
+        return SpeechJobResponse(
+            id=job.id,
+            status=job.status,
+            text_corrected=job.text_corrected,
+            segment_count=job.segment_count,
+            audio_url=(
+                f"/api/v1/speech/jobs/{job.id}/audio"
+                if job.status == "completed"
+                else None
+            ),
+            error=job.error,
+        )
+
+    @app.post(
+        "/api/v1/speech/jobs",
+        response_model=SpeechJobResponse,
+        status_code=202,
+    )
+    async def create_speech_job(request: SpeechRequest) -> SpeechJobResponse:
+        if len(request.text) > active_settings.max_characters:
+            raise HTTPException(
+                status_code=413,
+                detail=(
+                    "text exceeds the configured limit of "
+                    f"{active_settings.max_characters} characters"
+                ),
+            )
+        if not active_provider.ready:
+            raise HTTPException(status_code=503, detail="speech provider is not ready")
+        text_review = review_text(request.text)
+        job = job_manager.submit(
+            text_review.repaired,
+            request.language,
+            request.voice,
+            request.speed,
+            text_corrected=text_review.changed,
+        )
+        return job_response(job)
+
+    @app.get(
+        "/api/v1/speech/jobs/{job_id}",
+        response_model=SpeechJobResponse,
+    )
+    async def get_speech_job(job_id: str) -> SpeechJobResponse:
+        job = job_manager.get(job_id)
+        if job is None:
+            raise HTTPException(status_code=404, detail="speech job was not found")
+        return job_response(job)
+
+    @app.get("/api/v1/speech/jobs/{job_id}/audio")
+    async def get_speech_job_audio(job_id: str) -> Response:
+        job = job_manager.get(job_id)
+        if job is None:
+            raise HTTPException(status_code=404, detail="speech job was not found")
+        if job.status != "completed" or job.audio is None:
+            raise HTTPException(status_code=409, detail="speech job is not complete")
+        return Response(
+            content=job.audio,
+            media_type="audio/wav",
+            headers={
+                "Content-Disposition": 'attachment; filename="bhashavox.wav"',
+                "X-BhashaVox-Segments": str(job.segment_count or 0),
+                "X-BhashaVox-Text-Corrected": str(job.text_corrected).lower(),
             },
         )
 

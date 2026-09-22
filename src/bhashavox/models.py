@@ -7,6 +7,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 LanguageChoice = Literal["auto", "en", "ta", "ml"]
+SpeechJobStatus = Literal["queued", "running", "completed", "failed"]
 
 
 class SpeechRequest(BaseModel):
@@ -45,6 +46,15 @@ class HealthResponse(BaseModel):
     version: str
     provider: str
     provider_ready: bool
+
+
+class SpeechJobResponse(BaseModel):
+    id: str
+    status: SpeechJobStatus
+    text_corrected: bool
+    segment_count: int | None = None
+    audio_url: str | None = None
+    error: str | None = None
 
 
 class TextReviewRequest(BaseModel):
