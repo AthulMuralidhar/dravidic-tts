@@ -12,11 +12,13 @@ RUN apt-get update \
 WORKDIR /build
 COPY pyproject.toml README.md LICENSE constraints.txt requirements-neural.txt ./
 COPY src ./src
-RUN python -m pip install --prefix=/install \
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN python -m pip install \
       --index-url https://download.pytorch.org/whl/cpu \
-      "torch==2.5.1+cpu" \
-    && python -m pip install --prefix=/install -r requirements-neural.txt \
-    && python -m pip install --prefix=/install --constraint constraints.txt .
+      "torch==2.5.1+cpu" "torchaudio==2.5.1+cpu" \
+    && python -m pip install -r requirements-neural.txt \
+    && python -m pip install --constraint constraints.txt .
 
 FROM python:3.11-slim AS neural-runtime
 
@@ -26,7 +28,8 @@ ENV PYTHONUNBUFFERED=1 \
     BHASHAVOX_PORT=8000 \
     BHASHAVOX_TTS_PROVIDER=indic-parler \
     BHASHAVOX_MAX_CHARACTERS=5000 \
-    HF_HOME=/home/app/.cache/huggingface
+    HF_HOME=/home/app/.cache/huggingface \
+    PATH="/opt/venv/bin:$PATH"
 
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends libsndfile1 \
@@ -34,7 +37,7 @@ RUN apt-get update \
     && useradd --create-home --uid 10001 app \
     && install --directory --owner=app --group=app /home/app/.cache/huggingface
 
-COPY --from=builder /install /usr/local
+COPY --from=builder /opt/venv /opt/venv
 
 USER app
 WORKDIR /home/app
