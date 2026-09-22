@@ -1,6 +1,7 @@
 # Session notes
 
-This folder is the durable handoff log for BhashaVox.
+This folder is the durable handoff log for Dravidic TTS (called BhashaVox in
+notes written before the 2026-09-23 rename).
 
 Create one Markdown file per working date using `YYYY-MM-DD.md`. Each note
 should record:

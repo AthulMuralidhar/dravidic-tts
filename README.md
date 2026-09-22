@@ -35,7 +35,7 @@ for non-Docker development, configuration, verification, and deployment notes.
 - [MVP definition](docs/product/mvp.md)
 - [Local-first provider architecture](docs/adr/0001-local-first-provider-architecture.md)
 - [TTS model and transliteration research](docs/research/tts-landscape.md)
-- [Current session handoff](docs/session-notes/2026-09-21.md)
+- [Current session handoff](docs/session-notes/2026-09-23.md)
 
 The current neural provider is AI4Bharat Indic Parler-TTS. The provider
 interface remains replaceable so faster local or hosted inference can be added.
