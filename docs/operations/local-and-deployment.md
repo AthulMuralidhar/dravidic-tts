@@ -107,3 +107,42 @@ On 2026-09-22 the CPU-only neural image, gated checkpoint download, Malayalam
 synthesis, resumable job API, LAN browser access, and persistent model cache
 were verified on Docker Desktop. A warm short Malayalam request took 41.9
 seconds. Long-form latency and listening quality remain under evaluation.
+
+## Resumable PDF batch conversion
+
+The batch worker renders pages whose embedded text is damaged, runs Malayalam
+and English Tesseract OCR, applies automatic text repair, and writes numbered
+WAV parts to `outputs/pdf/<document>/audio/`. It updates `manifest.json` and a
+phone-friendly `index.html` after every completed part. Rerunning the worker
+skips existing WAV files.
+
+Build the worker image and validate OCR on only the first page:
+
+```powershell
+docker compose --profile batch build pdf-worker
+docker compose --profile batch run --rm pdf-worker `
+  python -m dravidic_tts.pdf_batch `
+  /inputs/Nishayude_Ponnumon_Kambi_Novel.pdf `
+  --output-root /outputs/pdf --language ml --voice ml-anjali `
+  --max-pages 1 --prepare-only
+```
+
+Start the LAN listening server, then launch the full worker in the background:
+
+```powershell
+docker compose --profile batch up -d audio-server
+docker compose --profile batch run -d --name dravidic-tts-pdf-worker pdf-worker
+docker logs --follow dravidic-tts-pdf-worker
+```
+
+Open `http://127.0.0.1:8000/pdf/<document>/` on the laptop, or replace
+`127.0.0.1` with the laptop's current Wi-Fi IPv4 address on a phone connected
+to the same network. The page refreshes once per minute as parts finish.
+
+To resume after an interruption, remove the stopped one-off worker container
+and rerun the same `docker compose ... run` command. Completed audio is stored
+on the host and is not regenerated. The listening server can be stopped with:
+
+```powershell
+docker compose --profile batch stop audio-server
+```

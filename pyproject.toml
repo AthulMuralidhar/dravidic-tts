@@ -11,7 +11,9 @@ requires-python = ">=3.11"
 license = "Apache-2.0"
 dependencies = [
   "fastapi>=0.115,<1.0",
+  "Pillow>=12.0,<13.0",
   "pydantic>=2.9,<3.0",
+  "pypdfium2>=5.4,<6.0",
   "uvicorn[standard]>=0.30,<1.0",
 ]
 
@@ -25,6 +27,7 @@ dev = [
 
 [project.scripts]
 dravidic-tts = "dravidic_tts.main:run"
+dravidic-tts-pdf = "dravidic_tts.pdf_batch:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

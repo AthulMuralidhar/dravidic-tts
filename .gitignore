@@ -13,6 +13,8 @@ build/
 # Generated audio and model data
 outputs/
 models/
+test-pdfs/
+tmp/
 *.wav
 *.mp3
 

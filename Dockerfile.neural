@@ -10,15 +10,17 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
-COPY pyproject.toml README.md LICENSE constraints.txt requirements-neural.txt ./
-COPY src ./src
+COPY requirements-neural.txt ./
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 RUN python -m pip install \
       --index-url https://download.pytorch.org/whl/cpu \
       "torch==2.5.1+cpu" "torchaudio==2.5.1+cpu" \
-    && python -m pip install -r requirements-neural.txt \
-    && python -m pip install --constraint constraints.txt .
+    && python -m pip install -r requirements-neural.txt
+
+COPY pyproject.toml README.md LICENSE constraints.txt ./
+COPY src ./src
+RUN python -m pip install --constraint constraints.txt .
 
 FROM python:3.11-slim AS neural-runtime
 
@@ -32,7 +34,11 @@ ENV PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:$PATH"
 
 RUN apt-get update \
-    && apt-get install --yes --no-install-recommends libsndfile1 \
+    && apt-get install --yes --no-install-recommends \
+       libsndfile1 \
+       tesseract-ocr \
+       tesseract-ocr-eng \
+       tesseract-ocr-mal \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --create-home --uid 10001 app \
     && install --directory --owner=app --group=app /home/app/.cache/huggingface
