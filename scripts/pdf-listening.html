@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PDF audio progress</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    body { max-width: 760px; margin: auto; padding: 24px;
+      background: #121712; color: #eef4e8; }
+    header, article { background: #1d261d; border: 1px solid #3d4c3b;
+      border-radius: 16px; padding: 18px; margin-bottom: 16px; }
+    h1, h2 { margin-top: 0; } h2 { font-size: 1rem; }
+    progress, audio { display: block; width: 100%; margin: 12px 0; }
+    progress { height: 18px; accent-color: #a9e58e; }
+    a { color: #a9e58e; } .status { color: #efc76d; }
+    #connection { font-size: .9rem; color: #bdc9b8; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="title">PDF audio</h1>
+    <p id="summary">Loading saved progress…</p>
+    <progress id="overall" aria-label="Completed audio parts"></progress>
+    <p id="connection" role="status">Updates every 5 seconds.</p>
+  </header>
+  <main id="parts"></main>
+  <script>
+    const cards = new Map();
+    function render(batch) {
+      document.title = `${batch.title} — audio progress`;
+      document.getElementById('title').textContent = batch.title;
+      const ready = batch.parts.filter(p => p.status === 'completed').length;
+      document.getElementById('summary').textContent =
+        `${ready} of ${batch.parts.length} audio parts ready`;
+      const overall = document.getElementById('overall');
+      overall.max = Math.max(batch.parts.length, 1);
+      overall.value = ready;
+      for (const part of batch.parts) {
+        let card = cards.get(part.index);
+        if (!card) {
+          card = document.createElement('article');
+          card.innerHTML = '<h2></h2><p class="status"></p>' +
+            '<progress></progress><div class="player"></div><a>Read extracted text</a>';
+          cards.set(part.index, card);
+          document.getElementById('parts').append(card);
+        }
+        const pages = part.pages[0] === part.pages[1] ? `Page ${part.pages[0]}` :
+          `Pages ${part.pages[0]}–${part.pages[1]}`;
+        card.querySelector('h2').textContent = `Part ${part.index} · ${pages}`;
+        card.querySelector('a').href = part.text_url;
+        const status = card.querySelector('.status');
+        const bar = card.querySelector('progress');
+        bar.setAttribute('aria-label', `Part ${part.index} saved audio chunks`);
+        if (part.status === 'completed') {
+          status.textContent = 'Ready to play';
+          bar.max = 1; bar.value = 1;
+          if (!card.querySelector('audio')) {
+            const audio = document.createElement('audio');
+            audio.controls = true; audio.preload = 'none'; audio.src = part.audio_url;
+            card.querySelector('.player').append(audio);
+          }
+        } else if (part.chunks_total) {
+          const percentage = Math.floor(100 * part.chunks_done / part.chunks_total);
+          status.textContent = `${part.chunks_done} of ${part.chunks_total} audio chunks saved` +
+            ` (${percentage}%)` +
+            (part.chunks_done === part.chunks_total ? ' · Joining audio…' : '');
+          bar.max = part.chunks_total; bar.value = part.chunks_done;
+        } else if (part.status === 'generating') {
+          status.textContent = 'Preparing audio chunks…';
+          bar.removeAttribute('value');
+        } else {
+          status.textContent = 'Queued'; bar.max = 1; bar.value = 0;
+        }
+      }
+    }
+    async function update() {
+      try {
+        const response = await fetch('progress.json', { cache: 'no-store' });
+        if (!response.ok) throw new Error('Progress request failed');
+        render(await response.json());
+        document.getElementById('connection').textContent = 'Live · Updates every 5 seconds';
+      } catch {
+        document.getElementById('connection').textContent =
+          'Connection unavailable · Retrying automatically';
+      } finally {
+        setTimeout(update, 5000);
+      }
+    }
+    update();
+  </script>
+</body>
+</html>

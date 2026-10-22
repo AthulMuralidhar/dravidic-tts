@@ -90,6 +90,7 @@ services:
       - "${DRAVIDIC_TTS_AUDIO_PORT:-8000}:8080"
     volumes:
       - ./outputs:/outputs:ro
+      - ./scripts:/app:ro
     read_only: true
     tmpfs:
       - /tmp:size=16m,mode=1777
@@ -98,11 +99,7 @@ services:
     restart: unless-stopped
     command:
       - python
-      - -m
-      - http.server
-      - "8080"
-      - --bind
-      - 0.0.0.0
+      - /app/serve_audio.py
       - --directory
       - /outputs
 

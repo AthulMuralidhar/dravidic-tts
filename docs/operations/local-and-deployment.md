@@ -149,7 +149,11 @@ docker logs --follow dravidic-tts-pdf-worker
 
 Open `http://127.0.0.1:8000/pdf/<document>/` on the laptop, or replace
 `127.0.0.1` with the laptop's current Wi-Fi IPv4 address on a phone connected
-to the same network. The page refreshes once per minute as parts finish.
+to the same network. The listening server shows a progress bar and the saved
+small-chunk count for each active audio part (for example, `3 of 12 audio
+chunks saved`). It reads the checkpoint files every five seconds without
+reloading the page or interrupting audio playback. The `progress.json` endpoint
+returns the current counts without modifying the worker's manifest.
 
 To resume after an interruption, remove the stopped one-off worker container
 and rerun the same `docker compose ... run` command. Completed audio is stored
