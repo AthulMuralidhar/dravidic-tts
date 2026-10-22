@@ -57,7 +57,8 @@ class AudioHandler(SimpleHTTPRequestHandler):
                     content = json.dumps(batch_progress(directory)).encode("utf-8")
                     return self._response(content, "application/json")
                 if path.is_dir() or path.name == "index.html":
-                    content = Path(__file__).with_name("pdf-listening.html").read_bytes()
+                    template = Path(__file__).with_name("pdf-listening.html")
+                    content = template.read_bytes()
                     return self._response(content, "text/html; charset=utf-8")
             except (OSError, ValueError, KeyError):
                 self.send_error(503, "Progress temporarily unavailable")
