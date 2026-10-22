@@ -116,6 +116,18 @@ WAV parts to `outputs/pdf/<document>/audio/`. It updates `manifest.json` and a
 phone-friendly `index.html` after every completed part. Rerunning the worker
 skips existing WAV files.
 
+Every small neural chunk is also saved immediately under
+`outputs/pdf/<document>/audio-chunks/<part>/<fingerprint>/chunk-NNNN.wav`.
+The adjacent `plan.json` records the text, language, voice, speed, provider,
+and model used. Writes are atomic and flushed to disk. After an interruption,
+the worker validates and reuses finished chunk WAVs, regenerates missing or
+truncated chunks, then joins them into the usual page-level audio part. Only
+the chunk being computed at the moment of interruption needs to repeat.
+Changing synthesis settings selects a different checkpoint fingerprint;
+`--force` regenerates all chunks. Use a different output root when changing
+settings for parts that already have a final WAV, since completed final parts
+are still skipped on a normal resume.
+
 Build the worker image and validate OCR on only the first page:
 
 ```powershell

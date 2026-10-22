@@ -51,7 +51,9 @@ def embedded_text_needs_ocr(text: str) -> bool:
 
     if len(text.strip()) < 40:
         return True
-    broken = sum(text.count(marker) for marker in ("\x00", "\ufffd", "\ufffe", "\uffff"))
+    broken = sum(
+        text.count(marker) for marker in ("\x00", "\ufffd", "\ufffe", "\uffff")
+    )
     return broken / max(len(text), 1) > 0.001
 
 
@@ -406,6 +408,8 @@ def run_batch(args: argparse.Namespace) -> Path:
             args.language,
             args.voice,
             args.speed,
+            checkpoint_directory=output_directory / "audio-chunks" / part.stem,
+            reuse_checkpoints=not args.force,
             progress_callback=lambda done, total, stem=part.stem: print(
                 f"{stem}: neural chunk {done}/{total}", flush=True
             ),
