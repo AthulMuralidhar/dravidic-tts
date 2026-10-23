@@ -2,5 +2,5 @@
 huggingface-hub[cli]>=0.26,<1.0
 numpy>=1.26,<3.0
 soundfile>=0.12,<1.0
-transformers==4.46.1
+transformers==5.10.1
 parler-tts @ git+https://github.com/huggingface/parler-tts.git@d108732
