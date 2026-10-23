@@ -120,3 +120,10 @@ cause of the earlier Windows freeze.
 The predeployment suite passed 37 tests, including real distinct-process
 inference on consecutive test parts, resume without regenerating completed
 parts, recovery from a failed child, and bounded repeated failure.
+
+Deployment verification also confirmed the effective Docker and cgroup-v1
+limits. A separate 128 MiB container killed an oversized allocation child
+with SIGKILL while its supervisor remained alive, demonstrating containment.
+The production worker resumed at part 8 and saved its first of fifteen chunks;
+that child reported a peak RSS of 6,291,096 KiB, current RSS of 5,008,024 KiB,
+and zero swap. Long-duration stability remains subject to the continuing run.
