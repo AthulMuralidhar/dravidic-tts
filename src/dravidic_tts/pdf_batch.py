@@ -10,9 +10,12 @@ import json
 import os
 import re
 import subprocess
+import sys
 import tempfile
+import time
 import unicodedata
 import wave
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -20,8 +23,6 @@ from typing import Any
 
 from dravidic_tts.config import Settings
 from dravidic_tts.language import TextSegment, chunk_segments
-from dravidic_tts.providers.factory import create_provider
-from dravidic_tts.service import SpeechService
 from dravidic_tts.text import review_text
 
 _REMOVABLE_LINE = re.compile(
@@ -334,6 +335,97 @@ def _save_manifest(output_directory: Path, manifest: dict[str, Any]) -> None:
     write_listening_page(output_directory, manifest)
 
 
+def _run_inference_process(
+    request_path: Path,
+    progress_callback: Callable[[dict[str, Any]], None],
+) -> dict[str, Any]:
+    request = json.loads(request_path.read_text(encoding="utf-8"))
+    progress_path = Path(request["progress_path"])
+    last_progress = ""
+
+    def report() -> None:
+        nonlocal last_progress
+        if progress_path.exists():
+            content = progress_path.read_text(encoding="utf-8")
+            if content != last_progress:
+                progress_callback(json.loads(content))
+                last_progress = content
+
+    with subprocess.Popen([
+        sys.executable, "-m", "dravidic_tts.part_worker", str(request_path),
+    ]) as process:
+        try:
+            while True:
+                try:
+                    return_code = process.wait(timeout=1)
+                    report()
+                    break
+                except subprocess.TimeoutExpired:
+                    report()
+        except BaseException:
+            process.terminate()
+            try:
+                process.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
+            raise
+    if return_code:
+        raise RuntimeError(f"Inference process exited with code {return_code}")
+    return json.loads(Path(request["result_path"]).read_text(encoding="utf-8"))
+
+
+def _generate_isolated_part(
+    part: BatchPart,
+    record: dict[str, Any],
+    output_directory: Path,
+    manifest: dict[str, Any],
+    args: argparse.Namespace,
+    provider: str,
+) -> None:
+    work_directory = output_directory / "work" / part.stem
+    work_directory.mkdir(parents=True, exist_ok=True)
+    request_path = work_directory / "request.json"
+    request = {
+        "stem": part.stem, "provider": provider,
+        "text_path": str(output_directory / record["text_url"]),
+        "audio_path": str(output_directory / record["audio_url"]),
+        "checkpoint_directory": str(output_directory / "audio-chunks" / part.stem),
+        "progress_path": str(work_directory / "progress.json"),
+        "result_path": str(work_directory / "result.json"),
+        "language": args.language, "voice": args.voice, "speed": args.speed,
+    }
+
+    def progress(snapshot: dict[str, Any]) -> None:
+        record.update(snapshot)
+        _save_manifest(output_directory, manifest)
+
+    for attempt in range(1, 4):
+        record["attempt"] = attempt
+        request["reuse_checkpoints"] = not args.force or attempt > 1
+        _atomic_write_text(request_path, json.dumps(request))
+        print(
+            f"Starting fresh inference process for {part.stem} (attempt {attempt}/3)",
+            flush=True,
+        )
+        try:
+            result = _run_inference_process(request_path, progress)
+        except RuntimeError as exc:
+            record["last_error"] = str(exc)
+            if attempt == 3:
+                record["status"] = "failed"
+                manifest["status"] = "failed"
+                _save_manifest(output_directory, manifest)
+                raise
+            print(f"{exc}; retrying from saved chunks", flush=True)
+            _save_manifest(output_directory, manifest)
+            time.sleep(2)
+        else:
+            record.update(result)
+            record.pop("last_error", None)
+            return
+
+
 def run_batch(args: argparse.Namespace) -> Path:
     pdf_path = Path(args.pdf).resolve()
     if not pdf_path.is_file():
@@ -386,10 +478,6 @@ def run_batch(args: argparse.Namespace) -> Path:
         return output_directory
 
     settings = Settings.from_env()
-    provider = create_provider(settings.provider)
-    if not provider.ready:
-        raise RuntimeError(f"Speech provider {provider.name!r} is not ready")
-    service = SpeechService(provider)
 
     for part, record in zip(parts, manifest["parts"], strict=True):
         audio_path = output_directory / record["audio_url"]
@@ -403,21 +491,10 @@ def run_batch(args: argparse.Namespace) -> Path:
             f"Generating {part.stem} ({len(part.text)} characters)",
             flush=True,
         )
-        result = service.synthesize(
-            part.text,
-            args.language,
-            args.voice,
-            args.speed,
-            checkpoint_directory=output_directory / "audio-chunks" / part.stem,
-            reuse_checkpoints=not args.force,
-            progress_callback=lambda done, total, stem=part.stem: print(
-                f"{stem}: neural chunk {done}/{total}", flush=True
-            ),
+        _generate_isolated_part(
+            part, record, output_directory, manifest, args, settings.provider,
         )
-        _atomic_write_bytes(audio_path, result.audio)
         record["status"] = "completed"
-        record["segments"] = result.segment_count
-        record["duration_seconds"] = round(_wav_duration(result.audio), 3)
         _save_manifest(output_directory, manifest)
 
     manifest["status"] = "completed"

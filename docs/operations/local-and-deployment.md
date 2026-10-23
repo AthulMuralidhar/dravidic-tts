@@ -162,3 +162,25 @@ on the host and is not regenerated. The listening server can be stopped with:
 ```powershell
 docker compose --profile batch stop audio-server
 ```
+
+### Memory protection for long books
+
+The PDF supervisor starts a fresh `dravidic_tts.part_worker` process for each
+audio part. The child loads the locally cached model, generates that part,
+saves its WAV and metadata, then exits. The next part gets a new process,
+releasing the previous process's neural allocations. Voice, model, and chunk
+settings are unchanged. `work/<part>/progress.json` and the manifest record
+the child PID, RSS, peak RSS, and swapped memory in KiB after each chunk on
+Linux; `work/<part>/result.json` records the completed part's measurements.
+
+The Compose worker is capped at 8 GiB RAM and 8 GiB total RAM-plus-swap,
+which disables swap for this container. It is limited to six CPU cores and
+256 processes/threads. The container budget includes both the supervisor
+and its inference child; it leaves memory and CPU capacity outside the worker.
+
+If an inference process fails or is killed, the supervisor retries the part
+from saved chunks, up to three attempts in that run. Even a forced initial
+generation reuses newly saved chunks on retries. If all attempts fail, the
+manifest and UI show a stopped/failed part and retain its checkpoints. There
+is no infinite restart loop and no automatic whole-container restart policy.
+An explicit later restart uses the ordinary checkpoint resume procedure.

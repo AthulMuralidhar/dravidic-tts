@@ -56,9 +56,18 @@ services:
       dockerfile: Dockerfile.neural
       target: neural-runtime
     image: dravidic-tts:neural-local
+    init: true
+    mem_limit: 8g
+    memswap_limit: 8g
+    cpus: 6
+    pids_limit: 256
     environment:
       DRAVIDIC_TTS_PROVIDER: indic-parler
       HF_HOME: /home/app/.cache/huggingface
+      OMP_NUM_THREADS: "6"
+      MKL_NUM_THREADS: "6"
+      OPENBLAS_NUM_THREADS: "6"
+      MALLOC_ARENA_MAX: "2"
     volumes:
       - hf-cache:/home/app/.cache/huggingface
       - ./test-pdfs:/inputs:ro

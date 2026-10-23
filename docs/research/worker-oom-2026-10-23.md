@@ -94,3 +94,29 @@ process recycling should reuse the existing chunk checkpoints and local model
 cache. Automatic restart/resume can restore liveness after a kill, but does
 not by itself cure memory growth. These are proposed follow-up changes, not
 implemented or benchmarked fixes in this investigation.
+
+## Authorized implementation after part 7
+
+The user requested the fix after part 7 finished and explicitly endorsed
+restarting inference after every audio part. Part 7 completed and its full
+143.58-second WAV was validated before the old worker was stopped. An external
+watcher paused the container at the file boundary; part 8 had zero completed
+chunks when the container was stopped and retained for rollback.
+
+The implementation separates the batch supervisor from per-part inference.
+Each audio part runs in a new Python process and that process exits before
+the next part starts. Per-chunk memory snapshots record RSS, high-water RSS,
+swap, and process ID. Existing chunk fingerprints, voice settings, and WAV
+assembly are retained. The supervisor retries a failed child at most three
+times using the saved chunks, then records failure and exits.
+
+Compose limits the combined worker to 8 GiB RAM with no swap, six CPU cores,
+and 256 processes/threads. Neural math libraries use six threads and the
+glibc arena limit is two. These measures bound this workload's resource use
+and release inference memory at part boundaries; they do not prove which
+specific library allocation caused the original growth or establish the
+cause of the earlier Windows freeze.
+
+The predeployment suite passed 37 tests, including real distinct-process
+inference on consecutive test parts, resume without regenerating completed
+parts, recovery from a failed child, and bounded repeated failure.

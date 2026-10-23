@@ -32,7 +32,8 @@
       document.getElementById('title').textContent = batch.title;
       const ready = batch.parts.filter(p => p.status === 'completed').length;
       document.getElementById('summary').textContent =
-        `${ready} of ${batch.parts.length} audio parts ready`;
+        `${ready} of ${batch.parts.length} audio parts ready` +
+        (batch.status === 'failed' ? ' · Generation stopped; saved chunks retained' : '');
       const overall = document.getElementById('overall');
       overall.max = Math.max(batch.parts.length, 1);
       overall.value = ready;
@@ -60,6 +61,10 @@
             audio.controls = true; audio.preload = 'none'; audio.src = part.audio_url;
             card.querySelector('.player').append(audio);
           }
+        } else if (part.status === 'failed') {
+          status.textContent = `Stopped after ${part.attempt || 3} attempts · ` +
+            `${part.chunks_done} of ${part.chunks_total || '?'} audio chunks saved`;
+          bar.max = part.chunks_total || 1; bar.value = part.chunks_done;
         } else if (part.chunks_total) {
           const percentage = Math.floor(100 * part.chunks_done / part.chunks_total);
           status.textContent = `${part.chunks_done} of ${part.chunks_total} audio chunks saved` +
